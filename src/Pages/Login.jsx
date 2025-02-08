@@ -1,14 +1,23 @@
-import React from 'react'
+import React, { useState } from 'react'
 import './Login.css'
-import backgroundImage from "../assets/dash1back.jpeg"
+import backgroundImage from "../assets/tiger3.jpg"
 import { useNavigate } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
+import { login } from '../redux/userApiCalls'
 
 const Login = () => {
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const handleNaviagtion = () => {
-    navigate("/dashboard")
+  const [email, setEmail] = useState("")
+  const [ password , setPassword] = useState("")
+
+  const handleNaviagtion = async (e) => {
+    e.preventDefault()
+
+    const loginInfo = { email , password }
+    await login(dispatch, loginInfo, navigate)
   }
   
   return (
@@ -25,11 +34,11 @@ const Login = () => {
             <form className='mt-3' onSubmit={handleNaviagtion}>
                 <div class="mb-3">
                   <label for="exampleInputEmail1" class="form-label">Email address</label>
-                  <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"/>
+                  <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" value={email} onChange={(e) => setEmail(e.target.value)}/>
                 </div>
                 <div class="mb-3">
                   <label for="exampleInputPassword1" class="form-label">Password</label>
-                  <input type="password" class="form-control" id="exampleInputPassword1"/>
+                  <input type="password" class="form-control" id="exampleInputPassword1" value={password} onChange={(e) => setPassword(e.target.value)}/>
                 </div>
                 <div class="mb-3 form-check">
                   <input type="checkbox" class="form-check-input" id="exampleCheck1"/>
