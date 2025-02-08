@@ -403,13 +403,40 @@ const handleSubmitResource = async () => {
 </div>
 
   
+
 <div className="mt-4 p-4 bg-white/10 shadow-md ml-4 rounded-lg">
+    <h2 className="text-xl font-bold mb-4">Available Resources</h2>
+    {loading ? (
+      <p>Loading resources...</p>
+    ) : resources.length === 0 ? (
+      <p className="text-gray-600">No resources available</p>
+    ) : (
+      <ul className="space-y-2">
+        {resources.map((resource) => (
+          <li 
+            key={resource.id} 
+            className="p-3 bg-emerald-50 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+          >
+            <p className="font-medium">{resource.title}</p>
+            <p className="text-sm text-gray-600 mt-1">
+              {resource.shortDescription.substring(0, 40)}...
+            </p>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+
+  {/* Add New Resource Section */}
+  <div className="mt-4 p-4 bg-white/10 shadow-md ml-4 rounded-lg">
+  <h2> Add New Resource</h2>
     <button 
       onClick={() => setNewResource(!newResource)}
-      className="w-full bg-emerald-600 text-white py-2 rounded-lg"
+      className="w-full bg-emerald-600 text-white mt-4 py-2 rounded-lg"
     >
       + Add New Resource
     </button>
+    
 
     {newResource && (
   <div className="mt-4 p-4 bg-gray-100 rounded-lg space-y-4">
