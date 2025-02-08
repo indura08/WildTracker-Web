@@ -61,8 +61,10 @@ const AutoFitMap = ({ incidents }) => {
 
 const Dashboard = () => {
   const [incidents, setIncidents] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [newResource, setNewResource] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
@@ -74,10 +76,32 @@ const Dashboard = () => {
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
 
+  
+const [resources, setResources] = useState([]);
+const [title, setTitle] = useState("");
+const [shortDescription, setShortDescription] = useState("");
+const [fullDescription, setFullDescription] = useState("");
+const [imageUrl, setImageUrl] = useState("");
+
   useEffect(() => {
     fetchIncidents();
+    fetchUsers();
+    fetchResources(); 
   }, []);
 
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const querySnapshot = await getDocs(collection(firestore, "users"));
+      const usersData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setUsers(usersData);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    } finally {
+      setLoading(false);
+    }
+
+  }
   const fetchIncidents = async () => {
     setLoading(true);
     try {
@@ -90,6 +114,51 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
+  
+const fetchResources = async () => {
+  setLoading(true);
+  try {
+    const querySnapshot = await getDocs(collection(firestore, "resources"));
+    const resourcesData = querySnapshot.docs.map((doc) => ({ 
+      id: doc.id, 
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate?.()?.toLocaleString() || 'Unknown date'
+    }));
+    setResources(resourcesData);
+  } catch (error) {
+    console.error("Error fetching resources:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Add resource submission handler
+const handleSubmitResource = async () => {
+  if (!title.trim() || !shortDescription.trim() || !fullDescription.trim() || !imageUrl.trim()) {
+    alert("Please fill all fields including image URL!");
+    return;
+  }
+
+  try {
+    await addDoc(collection(firestore, "resources"), {
+      title,
+      shortDescription,
+      description: fullDescription,
+      imageUrl: imageUrl.trim(), // Add image URL to document
+      createdAt: serverTimestamp()
+    });
+
+    // Reset form
+    setNewResource(false);
+    setTitle("");
+    setShortDescription("");
+    setFullDescription("");
+    setImageUrl(""); // Reset image URL
+    fetchResources();
+  } catch (error) {
+    console.error("Error submitting resource:", error);
+  }
+};
 
   const confirmDelete = (id) => {
     setDeleteId(id);
@@ -157,7 +226,7 @@ const Dashboard = () => {
 
           <div className="p-4 bg-emerald-200 rounded-lg mb-4 text-center">
             <p className="text-lg font-semibold">Registered Users</p>
-            <p className="text-2xl">--</p>
+            <p className="text-2xl">{users.length}</p>
           </div>
 
           <div className="p-4 bg-emerald-200 rounded-lg mb-4 text-center">
@@ -167,7 +236,7 @@ const Dashboard = () => {
 
           <div className="p-4 bg-emerald-200 rounded-lg mb-4 text-center">
             <p className="text-lg font-semibold">Total Resources</p>
-            <p className="text-2xl">--</p>
+            <p className="text-2xl">{resources.length}</p>
           </div>
         </div>
 
@@ -287,18 +356,19 @@ const Dashboard = () => {
 
 
 {/* Right panel - Map View */}
-<div className="w-1/4 h-96 p-4 bg-white/10 shadow-md ml-4 rounded-lg">
+<div className="w-1/4">
+<div className="h-96 p-4 bg-white/10 shadow-md ml-4 rounded-lg">
   <h2 className="text-xl font-bold mb-4">Incident Map</h2>
   <div className="h-full rounded-lg overflow-hidden">
     <MapContainer
       center={[6.719551, 80.785860]}
       zoom={13}
       style={{ height: '80%', width: '100%' }}
-    >
+      >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      />
+        />
       <AutoFitMap incidents={incidents} />
       
       {incidents.map((incident) => {
@@ -306,7 +376,7 @@ const Dashboard = () => {
           console.log('Invalid location for incident:', incident.id)
           return null
         }
-
+        
         return (
           <Marker
             key={incident.id}
@@ -329,6 +399,73 @@ const Dashboard = () => {
         )
       })}
     </MapContainer>
+  </div>
+</div>
+
+  
+<div className="mt-4 p-4 bg-white/10 shadow-md ml-4 rounded-lg">
+    <button 
+      onClick={() => setNewResource(!newResource)}
+      className="w-full bg-emerald-600 text-white py-2 rounded-lg"
+    >
+      + Add New Resource
+    </button>
+
+    {newResource && (
+  <div className="mt-4 p-4 bg-gray-100 rounded-lg space-y-4">
+    <input
+      value={title}
+      onChange={(e) => setTitle(e.target.value)}
+      className="block w-full p-2 border rounded"
+      placeholder="Title"
+    />
+
+    <input
+      value={imageUrl}
+      onChange={(e) => setImageUrl(e.target.value)}
+      className="block w-full p-2 border rounded"
+      placeholder="Image URL"
+      type="url"
+    />
+
+    {imageUrl && (
+      <div className="mt-2 p-2 border rounded bg-white">
+        <p className="text-sm text-gray-600 mb-2">Image Preview:</p>
+        <img 
+          src={imageUrl} 
+          alt="Preview" 
+          className="max-h-32 mx-auto object-contain"
+          onError={(e) => {
+            e.target.style.display = 'none'; // Hide broken images
+          }}
+        />
+      </div>
+    )}
+
+    <textarea
+      value={shortDescription}
+      onChange={(e) => setShortDescription(e.target.value)}
+      className="block w-full p-2 border rounded"
+      placeholder="Short Description"
+      rows="2"
+    ></textarea>
+    
+    <textarea
+      value={fullDescription}
+      onChange={(e) => setFullDescription(e.target.value)}
+      className="block w-full p-2 border rounded"
+      placeholder="Full Description"
+      rows="4"
+    ></textarea>
+
+    <button
+      onClick={handleSubmitResource}
+      className="mt-2 bg-emerald-600 text-white py-2 px-4 rounded w-full"
+    >
+      Submit Resource
+    </button>
+  </div>
+)}
   </div>
 </div>
 </div>
