@@ -1,8 +1,15 @@
 import React from 'react'
 import './Login.css'
 import backgroundImage from "../assets/dash1back.jpeg"
+import { useNavigate } from 'react-router-dom'
 
 const Login = () => {
+
+  const navigate = useNavigate();
+
+  const handleNaviagtion = () => {
+    navigate("/dashboard")
+  }
   return (
     <>
       <div class="container-fluid login-container" style={{ backgroundImage: `url(${backgroundImage})` }}>
@@ -14,7 +21,7 @@ const Login = () => {
             <p>Login to your dashboard</p>
 
 
-            <form className='mt-3'>
+            <form className='mt-3' onSubmit={handleNaviagtion}>
                 <div class="mb-3">
                   <label for="exampleInputEmail1" class="form-label">Email address</label>
                   <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"/>
