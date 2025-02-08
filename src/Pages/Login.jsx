@@ -10,6 +10,7 @@ const Login = () => {
   const handleNaviagtion = () => {
     navigate("/dashboard")
   }
+  
   return (
     <>
       <div class="container-fluid login-container" style={{ backgroundImage: `url(${backgroundImage})` }}>
